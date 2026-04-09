@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { API } from "@/api";
 import { Button } from "@/components/ui";
 
 export function LogoutButton() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+
+  const logoutMutation = useMutation({
+    mutationFn: API.logoutCurrentUser,
+  });
 
   const onLogout = async () => {
-    setIsLoading(true);
-    await API.logoutCurrentUser();
+    await logoutMutation.mutateAsync();
     router.push("/login");
     router.refresh();
   };
 
   return (
-    <Button type="button" variant="ghost" onClick={onLogout} disabled={isLoading}>
-      {isLoading ? "Logging out..." : "Logout"}
+    <Button type="button" variant="ghost" onClick={onLogout} disabled={logoutMutation.isPending}>
+      {logoutMutation.isPending ? "Logging out..." : "Logout"}
     </Button>
   );
 }

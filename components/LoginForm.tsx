@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { API } from "@/api";
 import { isStoredTokenValid } from "@/lib/client-auth";
@@ -11,7 +12,10 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const loginMutation = useMutation({
+    mutationFn: API.loginWithEmailPassword,
+  });
 
   useEffect(() => {
     const existingToken = localStorage.getItem("accessToken");
@@ -23,16 +27,11 @@ export function LoginForm() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
-
-    setIsLoading(true);
-    const result = await API.loginWithEmailPassword({ email, password });
+    const result = await loginMutation.mutateAsync({ email, password });
     if (!result.ok) {
       setErrorMessage(result.message ?? "Invalid email or password.");
-      setIsLoading(false);
       return;
     }
-
-    setIsLoading(false);
     router.push("/dashboard");
   };
 
@@ -79,8 +78,8 @@ export function LoginForm() {
             </p>
           ) : null}
 
-          <Button type="submit" fullWidth disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+          <Button type="submit" fullWidth disabled={loginMutation.isPending}>
+            {loginMutation.isPending ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>
