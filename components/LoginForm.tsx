@@ -1,14 +1,38 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API } from "@/api";
+import { isStoredTokenValid } from "@/lib/client-auth";
 import { Button, Input } from "@/components/ui";
 
 export function LoginForm() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    const existingToken = localStorage.getItem("accessToken");
+    if (existingToken && isStoredTokenValid(existingToken)) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage("");
+
+    setIsLoading(true);
+    const result = await API.loginWithEmailPassword({ email, password });
+    if (!result.ok) {
+      setErrorMessage(result.message ?? "Invalid email or password.");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(false);
     router.push("/dashboard");
   };
 
@@ -33,6 +57,8 @@ export function LoginForm() {
             type="email"
             placeholder="name@company.com"
             autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             required
           />
 
@@ -42,11 +68,19 @@ export function LoginForm() {
             type="password"
             placeholder="Enter your password"
             autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             required
           />
 
-          <Button type="submit" fullWidth>
-            Sign in
+          {errorMessage ? (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errorMessage}
+            </p>
+          ) : null}
+
+          <Button type="submit" fullWidth disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>

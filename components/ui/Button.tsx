@@ -22,7 +22,7 @@ export function Button({
     <button
       className={[
         "inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+        "focus-visible:outline focus-visible:outline-offset-2",
         "disabled:cursor-not-allowed disabled:opacity-60",
         variantStyles[variant],
         fullWidth ? "w-full" : "",

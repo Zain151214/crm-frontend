@@ -1,15 +1,43 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { LogoutButton } from "@/components";
+import { decodeClientToken, isStoredTokenValid } from "@/lib/client-auth";
+
 export default function DashboardPage() {
+  const router = useRouter();
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const payload = token ? decodeClientToken(token) : null;
+  const role = payload?.role === "admin" || payload?.role === "member" ? payload.role : null;
+  const isAuthorized = Boolean(token && isStoredTokenValid(token) && role);
+
+  useEffect(() => {
+    if (!isAuthorized) {
+      router.replace("/login");
+    }
+  }, [isAuthorized, router]);
+
+  if (!isAuthorized) return null;
+
+  const isAdmin = role === "admin";
+
   return (
     <main className="min-h-screen bg-zinc-100 p-6 md:p-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
-          <p className="text-sm font-medium text-indigo-600">CRM Dashboard</p>
+          <p className="text-sm font-medium text-indigo-600">
+            {isAdmin ? "Admin Dashboard" : "CRM Dashboard"}
+          </p>
           <h1 className="mt-1 text-3xl font-bold text-zinc-900">
-            Welcome to your dashboard
+            {isAdmin ? "Admin Dashboard" : "User Logged In"}
           </h1>
           <p className="mt-2 text-sm text-zinc-600">
             You are logged in successfully.
           </p>
+          <div className="mt-4">
+            <LogoutButton />
+          </div>
         </header>
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
