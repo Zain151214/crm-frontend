@@ -8,6 +8,11 @@ import { ListHeader, Loader, PaginationControls } from "@/components";
 
 const PAGE_SIZE = 10;
 
+function formatEntityTypeLabel(type: string): string {
+  if (!type) return "Entity";
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+}
+
 export default function ActivityLogsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -30,8 +35,9 @@ export default function ActivityLogsPage() {
       (log) =>
         log.entityType.toLowerCase().includes(q) ||
         log.action.toLowerCase().includes(q) ||
-        log.performedBy.toLowerCase().includes(q) ||
-        log.entityId.toLowerCase().includes(q),
+        (log.performedByName?.toLowerCase().includes(q) ?? false) ||
+        (log.performedBy?.toLowerCase().includes(q) ?? false) ||
+        (log.entityName?.toLowerCase().includes(q) ?? false),
     );
   }, [data?.data, debounced]);
 
@@ -46,7 +52,7 @@ export default function ActivityLogsPage() {
           setSearch(value);
           setPage(1);
         }}
-        searchLabel="Filter this page (type, action, user id, entity id)"
+        searchLabel="Filter this page (type, action, performer name, entity name)"
       />
       {isPending ? <Loader label="Loading activity…" /> : null}
       <section className="rounded-2xl border border-indigo-100 bg-white/90 p-4 shadow-lg shadow-indigo-950/5">
@@ -55,9 +61,14 @@ export default function ActivityLogsPage() {
             <p className="font-medium text-zinc-900">
               {log.entityType} · {log.action}
             </p>
-            <p className="text-sm text-zinc-600">Entity ID: {log.entityId}</p>
+            {log.entityName?.trim() ? (
+              <p className="text-sm text-zinc-600">
+                {formatEntityTypeLabel(log.entityType)}: {log.entityName.trim()}
+              </p>
+            ) : null}
             <p className="text-xs text-zinc-500">
-              By {log.performedBy} at {new Date(log.timestamp).toLocaleString()}
+              By {log.performedByName?.trim() || log.performedBy?.trim() || "—"} at{" "}
+              {new Date(log.timestamp).toLocaleString()}
             </p>
           </div>
         ))}

@@ -1,9 +1,11 @@
 import type {
   ActivityLog,
+  AdminUserDetail,
   AssignCustomerInput,
   CreateCustomerInput,
   CreateUserInput,
   Customer,
+  CustomerDetail,
   UpdateCustomerInput,
   ListActivityLogsParams,
   ListCustomersParams,
@@ -24,7 +26,9 @@ import {
 
 export type {
   ActivityLog,
+  AdminUserDetail,
   Customer,
+  CustomerDetail,
   Note,
   OrganizationSummary,
   Paginated,
@@ -61,17 +65,23 @@ export const CRM_API = {
     return result;
   },
 
-  async getUserById(id: string): Promise<User | null> {
-    let page = 1;
-    const limit = 50;
-    for (let i = 0; i < 40; i++) {
-      const list = await this.listUsers({ page, limit, search: "" });
-      const found = list.data.find((u) => u.id === id);
-      if (found) return found;
-      if (page >= list.meta.totalPages) break;
-      page += 1;
+  async getUserById(id: string): Promise<AdminUserDetail | null> {
+    const token = getAccessToken();
+    if (!token) throw new Error("Not authenticated.");
+
+    const res = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(id)}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.status === 404) return null;
+
+    const body = (await res.json().catch(() => ({}))) as ApiErrorBody & Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error(formatApiMessage(body));
     }
-    return null;
+
+    return body as AdminUserDetail;
   },
 
   async createUser(input: CreateUserInput): Promise<User> {
@@ -177,7 +187,7 @@ export const CRM_API = {
     });
   },
 
-  async getCustomerById(id: string): Promise<Customer | null> {
+  async getCustomerById(id: string): Promise<CustomerDetail | null> {
     const token = getAccessToken();
     if (!token) throw new Error("Not authenticated.");
 
@@ -187,7 +197,13 @@ export const CRM_API = {
     });
 
     if (tryGet.ok) {
-      return (await tryGet.json()) as Customer;
+      const raw = (await tryGet.json()) as CustomerDetail;
+      return {
+        ...raw,
+        organizationName: raw.organizationName ?? "",
+        assignedToName: raw.assignedToName ?? null,
+        notes: Array.isArray(raw.notes) ? raw.notes : [],
+      };
     }
 
     if (tryGet.status !== 404) {
@@ -200,7 +216,14 @@ export const CRM_API = {
     for (let i = 0; i < 40; i++) {
       const list = await this.listCustomers({ page, limit, search: "" });
       const found = list.data.find((c) => c.id === id);
-      if (found) return found;
+      if (found) {
+        return {
+          ...found,
+          organizationName: "",
+          assignedToName: null,
+          notes: [],
+        };
+      }
       if (page >= list.meta.totalPages) break;
       page += 1;
     }

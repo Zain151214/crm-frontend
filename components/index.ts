@@ -4,4 +4,10 @@ export { Button, ConfirmDialog, EditCustomerDialog, Input, Loader } from "./ui";
 export { LoggedInUser } from "./LoggedInUser";
 export { LogoutButton } from "./LogoutButton";
 export { QueryProvider } from "./QueryProvider";
-export { BackLink, Sidebar, ListHeader, PaginationControls } from "./dashboard";
+export {
+  BackLink,
+  CustomerDetailSummary,
+  Sidebar,
+  ListHeader,
+  PaginationControls,
+} from "./dashboard";

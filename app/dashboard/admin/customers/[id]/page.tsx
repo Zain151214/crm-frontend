@@ -5,7 +5,7 @@ import { Button } from "@/components/ui";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { BackLink, ConfirmDialog, EditCustomerDialog, Loader } from "@/components";
+import { BackLink, ConfirmDialog, CustomerDetailSummary, EditCustomerDialog, Loader } from "@/components";
 import { getErrorMessage, toastSuccess } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -15,6 +15,7 @@ export default function AdminCustomerDetailsPage() {
   const params = useParams<{ id: string }>();
 
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [assignUsersRequested, setAssignUsersRequested] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
@@ -30,7 +31,7 @@ export default function AdminCustomerDetailsPage() {
   } = useQuery({
     queryKey: ["users", "assign-options"],
     queryFn: () => CRM_API.listUsers({ page: 1, limit: 100, search: "" }),
-    enabled: Boolean(data),
+    enabled: Boolean(data) && assignUsersRequested,
   });
 
   const users = usersResult?.data ?? [];
@@ -71,7 +72,14 @@ export default function AdminCustomerDetailsPage() {
         <p className="text-sm text-zinc-600">Unable to load this customer. See the notification for details.</p>
       </div>
     );
-  if (!data) return <p className="text-sm text-zinc-600">Customer not found.</p>;
+  if (!data) {
+    return (
+      <div className="space-y-3">
+        <BackLink href="/dashboard/admin/customers" />
+        <p className="text-sm text-zinc-600">Customer not found.</p>
+      </div>
+    );
+  }
   const onAssign = () => {
     if (!selectedUserId) return;
     assignMutation.mutate(selectedUserId);
@@ -86,11 +94,8 @@ export default function AdminCustomerDetailsPage() {
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
       <BackLink href="/dashboard/admin/customers" />
       <h1 className="text-2xl font-bold text-zinc-900">{data.name}</h1>
-      <p className="mt-2 text-zinc-600">{data.email}</p>
-      <p className="mt-1 text-sm text-zinc-500">Phone: {data.phone}</p>
-      <p className="mt-1 text-sm text-zinc-500">Assigned to: {data.assignedToId ?? "Unassigned"}</p>
-      <p className="mt-1 text-sm text-zinc-500">Created at: {new Date(data.createdAt).toLocaleString()}</p>
-      <div className="mt-5 space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+      <CustomerDetailSummary data={data} />
+      <div className="mt-8 space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
         <p className="text-sm font-semibold text-zinc-800">Actions</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {!data.deletedAt ? (
@@ -102,16 +107,23 @@ export default function AdminCustomerDetailsPage() {
             className="h-11 min-w-56 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            disabled={usersLoading || usersError}
+            onFocus={() => {
+              if (!assignUsersRequested) setAssignUsersRequested(true);
+            }}
+            disabled={assignUsersRequested && usersLoading}
+            aria-label="Assign customer to user"
           >
-            {usersLoading ? <option value="">Loading users...</option> : null}
-            {usersError ? <option value="">Unable to load users</option> : null}
-            {!usersLoading && !usersError ? (
+            {!assignUsersRequested ? (
+              <option value="">Open to load users…</option>
+            ) : null}
+            {assignUsersRequested && usersLoading ? <option value="">Loading users…</option> : null}
+            {assignUsersRequested && usersError ? <option value="">Unable to load users</option> : null}
+            {assignUsersRequested && !usersLoading && !usersError ? (
               <option value="">
                 {users.length > 0 ? "Select user to assign" : "No users available"}
               </option>
             ) : null}
-            {!usersLoading && !usersError
+            {assignUsersRequested && !usersLoading && !usersError
               ? users.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name}

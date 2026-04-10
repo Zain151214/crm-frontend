@@ -21,6 +21,19 @@ export type Customer = {
   deletedAt: string | null;
 };
 
+export type CustomerDetailNote = {
+  id: string;
+  content: string;
+  createdAt: string;
+  createdByName: string;
+};
+
+export type CustomerDetail = Customer & {
+  organizationName: string;
+  assignedToName: string | null;
+  notes: CustomerDetailNote[];
+};
+
 export type Note = {
   id: string;
   content: string;
@@ -33,9 +46,11 @@ export type Note = {
 export type ActivityLog = {
   id: string;
   entityType: string;
-  entityId: string;
+  entityId?: string;
+  entityName?: string | null;
   action: string;
-  performedBy: string;
+  performedBy?: string | null;
+  performedByName?: string | null;
   organizationId: string;
   timestamp: string;
 };
@@ -55,6 +70,19 @@ export type OrganizationSummary = {
   name: string;
   createdAt: string;
   memberCount: number;
+};
+
+/** Admin GET /users/:id — getByIdForAdmin */
+export type AdminUserDetail = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  organizationId: string;
+  createdAt: string;
+  organization: OrganizationSummary | null;
+  assignedCustomerNames: string[];
+  assignedCustomerCount: number;
 };
 
 export type CreateUserInput = {
