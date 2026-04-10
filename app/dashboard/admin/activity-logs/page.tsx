@@ -65,7 +65,12 @@ export default function ActivityLogsPage() {
           <p className="py-6 text-center text-sm text-zinc-500">No entries on this page match the filter.</p>
         ) : null}
       </section>
-      <PaginationControls page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+      <PaginationControls
+        page={meta.page}
+        totalPages={meta.totalPages}
+        total={meta.total}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

@@ -1,8 +1,10 @@
 import type {
   ActivityLog,
+  AssignCustomerInput,
   CreateCustomerInput,
   CreateUserInput,
   Customer,
+  UpdateCustomerInput,
   ListActivityLogsParams,
   ListCustomersParams,
   ListOrganizationsParams,
@@ -133,8 +135,46 @@ export const CRM_API = {
     return apiRequest<Paginated<Customer>>(`/customers?${q.toString()}`, { method: "GET" });
   },
 
+  async listDeletedCustomers(params: ListCustomersParams): Promise<Paginated<Customer>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    const search = params.search?.trim() ?? "";
+    const q = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) q.set("search", search);
+    return apiRequest<Paginated<Customer>>(`/customers/deleted?${q.toString()}`, { method: "GET" });
+  },
+
   async createCustomer(input: CreateCustomerInput): Promise<Customer> {
     return apiRequest<Customer>("/customers", { method: "POST", json: input });
+  },
+
+  async updateCustomer(customerId: string, input: UpdateCustomerInput): Promise<Customer> {
+    return apiRequest<Customer>(`/customers/${customerId}`, {
+      method: "PUT",
+      json: input,
+    });
+  },
+
+  async assignCustomer(customerId: string, input: AssignCustomerInput): Promise<Customer> {
+    return apiRequest<Customer>(`/customers/${customerId}/assign`, {
+      method: "PATCH",
+      json: input,
+    });
+  },
+
+  async deleteCustomer(customerId: string): Promise<Customer> {
+    return apiRequest<Customer>(`/customers/${customerId}`, {
+      method: "DELETE",
+    });
+  },
+
+  async restoreCustomer(customerId: string): Promise<Customer> {
+    return apiRequest<Customer>(`/customers/${customerId}/restore`, {
+      method: "PATCH",
+    });
   },
 
   async getCustomerById(id: string): Promise<Customer | null> {

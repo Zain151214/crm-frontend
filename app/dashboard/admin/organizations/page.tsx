@@ -62,7 +62,12 @@ function OrganizationsContent() {
           <p className="py-6 text-center text-sm text-zinc-500">No organizations match your search.</p>
         ) : null}
       </section>
-      <PaginationControls page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+      <PaginationControls
+        page={meta.page}
+        totalPages={meta.totalPages}
+        total={meta.total}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

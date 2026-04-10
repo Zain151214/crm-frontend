@@ -36,6 +36,7 @@ export type ListHeaderProps = {
 export type PaginationControlsProps = {
   page: number;
   totalPages: number;
+  total?: number;
   onPageChange: (nextPage: number) => void;
 };
 

@@ -165,7 +165,12 @@ export default function MemberNotesPage() {
               </p>
             ) : null}
           </section>
-          <PaginationControls page={paged.page} totalPages={totalPages} onPageChange={setPage} />
+          <PaginationControls
+            page={paged.page}
+            totalPages={totalPages}
+            total={filteredNotes.length}
+            onPageChange={setPage}
+          />
         </>
       )}
     </div>

@@ -71,6 +71,15 @@ export type CreateCustomerInput = {
   assignedToId?: string;
 };
 
+export type UpdateCustomerInput = {
+  name: string;
+  phone: string;
+};
+
+export type AssignCustomerInput = {
+  userId: string;
+};
+
 export type ListCustomersParams = {
   page?: number;
   limit?: number;

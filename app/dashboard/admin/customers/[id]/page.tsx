@@ -1,15 +1,66 @@
 "use client";
 
 import { CRM_API } from "@/api";
+import { Button } from "@/components/ui";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { BackLink, Loader } from "@/components";
-import { useQuery } from "@tanstack/react-query";
+import { BackLink, ConfirmDialog, EditCustomerDialog, Loader } from "@/components";
+import { getErrorMessage, toastSuccess } from "@/lib/toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminCustomerDetailsPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useParams<{ id: string }>();
+
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
   const { data, isPending, isError } = useQuery({
     queryKey: ["customers", params.id],
     queryFn: () => CRM_API.getCustomerById(params.id),
+  });
+
+  const {
+    data: usersResult,
+    isPending: usersLoading,
+    isError: usersError,
+  } = useQuery({
+    queryKey: ["users", "assign-options"],
+    queryFn: () => CRM_API.listUsers({ page: 1, limit: 100, search: "" }),
+    enabled: Boolean(data),
+  });
+
+  const users = usersResult?.data ?? [];
+
+  const assignMutation = useMutation({
+    mutationFn: (userId: string) => CRM_API.assignCustomer(params.id, { userId }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toastSuccess("Customer assigned successfully.");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (input: { name: string; phone: string }) =>
+      CRM_API.updateCustomer(params.id, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: ["customers", params.id] });
+      setEditDialogOpen(false);
+      toastSuccess("Customer updated successfully.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => CRM_API.deleteCustomer(params.id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      toastSuccess("Customer deleted successfully.");
+      router.push("/dashboard/admin/customers");
+    },
   });
 
   if (isPending) return <Loader label="Loading customer…" />;
@@ -21,6 +72,15 @@ export default function AdminCustomerDetailsPage() {
       </div>
     );
   if (!data) return <p className="text-sm text-zinc-600">Customer not found.</p>;
+  const onAssign = () => {
+    if (!selectedUserId) return;
+    assignMutation.mutate(selectedUserId);
+  };
+
+  const onDelete = () => {
+    setDeleteDialogOpen(false);
+    deleteMutation.mutate();
+  };
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
@@ -30,6 +90,88 @@ export default function AdminCustomerDetailsPage() {
       <p className="mt-1 text-sm text-zinc-500">Phone: {data.phone}</p>
       <p className="mt-1 text-sm text-zinc-500">Assigned to: {data.assignedToId ?? "Unassigned"}</p>
       <p className="mt-1 text-sm text-zinc-500">Created at: {new Date(data.createdAt).toLocaleString()}</p>
+      <div className="mt-5 space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+        <p className="text-sm font-semibold text-zinc-800">Actions</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {!data.deletedAt ? (
+            <Button type="button" variant="ghost" onClick={() => setEditDialogOpen(true)}>
+              Edit
+            </Button>
+          ) : null}
+          <select
+            className="h-11 min-w-56 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
+            value={selectedUserId}
+            onChange={(e) => setSelectedUserId(e.target.value)}
+            disabled={usersLoading || usersError}
+          >
+            {usersLoading ? <option value="">Loading users...</option> : null}
+            {usersError ? <option value="">Unable to load users</option> : null}
+            {!usersLoading && !usersError ? (
+              <option value="">
+                {users.length > 0 ? "Select user to assign" : "No users available"}
+              </option>
+            ) : null}
+            {!usersLoading && !usersError
+              ? users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))
+              : null}
+          </select>
+          <Button
+            type="button"
+            onClick={onAssign}
+            disabled={!selectedUserId || assignMutation.isPending}
+          >
+            {assignMutation.isPending ? "Assigning..." : "Assign to user"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-red-700 ring-red-200 hover:bg-red-50 hover:text-red-700"
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
+        {assignMutation.isError ? (
+          <p className="text-xs text-red-600">
+            {getErrorMessage(assignMutation.error, "Unable to assign customer.")}
+          </p>
+        ) : null}
+        {deleteMutation.isError ? (
+          <p className="text-xs text-red-600">
+            {getErrorMessage(deleteMutation.error, "Unable to delete customer.")}
+          </p>
+        ) : null}
+        {updateMutation.isError ? (
+          <p className="text-xs text-red-600">
+            {getErrorMessage(updateMutation.error, "Unable to update customer.")}
+          </p>
+        ) : null}
+      </div>
+      <EditCustomerDialog
+        key={editDialogOpen ? `edit-${data.id}` : `edit-${data.id}-closed`}
+        open={editDialogOpen}
+        email={data.email}
+        initialName={data.name}
+        initialPhone={data.phone}
+        loading={updateMutation.isPending}
+        onCancel={() => setEditDialogOpen(false)}
+        onSave={(values) => updateMutation.mutate(values)}
+      />
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Customer?"
+        description={`This will be ${data.name}. You can restore later, but this customer will be removed from active lists now.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deleteMutation.isPending}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={onDelete}
+      />
     </section>
   );
 }

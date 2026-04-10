@@ -59,7 +59,12 @@ function AdminUsersContent() {
           ) : null}
         </div>
       </section>
-      <PaginationControls page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+      <PaginationControls
+        page={meta.page}
+        totalPages={meta.totalPages}
+        total={meta.total}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
