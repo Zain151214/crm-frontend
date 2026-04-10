@@ -1,11 +1,6 @@
-export type ClientAuthPayload = {
-  sub?: string;
-  email?: string;
-  role?: string;
-  organizationId?: string;
-  iat?: number;
-  exp?: number;
-};
+import type { ClientAuthPayload } from "@/types/auth";
+
+export type { ClientAuthPayload } from "@/types/auth";
 
 export function decodeClientToken(token: string): ClientAuthPayload | null {
   const parts = token.split(".");
@@ -31,4 +26,13 @@ export function isStoredTokenValid(token: string): boolean {
 
   const nowInSeconds = Math.floor(Date.now() / 1000);
   return payload.exp > nowInSeconds;
+}
+
+export function getTokenCookieMaxAgeSeconds(token: string): number {
+  const payload = decodeClientToken(token);
+  if (!payload || typeof payload.exp !== "number") {
+    return 60 * 60 * 24 * 7;
+  }
+  const maxAge = payload.exp - Math.floor(Date.now() / 1000);
+  return maxAge > 60 ? maxAge : 3600;
 }

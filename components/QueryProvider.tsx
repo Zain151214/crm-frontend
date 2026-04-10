@@ -1,16 +1,24 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
+import { getErrorMessage, toastError } from "@/lib/toast";
+import type { QueryProviderProps } from "@/types/components";
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-type Props = {
-  children: ReactNode;
-};
-
-export function QueryProvider({ children }: Props) {
+export function QueryProvider({ children }: QueryProviderProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error) => {
+            toastError(getErrorMessage(error, "Unable to load data."));
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            toastError(getErrorMessage(error, "Request failed."));
+          },
+        }),
         defaultOptions: {
           queries: {
             retry: 1,

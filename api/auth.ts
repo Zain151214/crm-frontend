@@ -1,45 +1,41 @@
-import { decodeClientToken } from "@/lib/client-auth";
+"use server";
 
-type ApiError = {
-  message?: string;
-  accessToken?: string;
-};
+import { cookies } from "next/headers";
+import { ACCESS_TOKEN_COOKIE } from "@/lib/cookies";
+import type { AuthLoginResponseBody } from "@/types/auth";
+import { API_BASE_URL, formatApiMessage } from "@/lib/http";
+import { getTokenCookieMaxAgeSeconds } from "@/lib/client-auth";
 
-const API_BASE_URL = process.env.AUTH_API_BASE_URL ?? "http://localhost:3002";
+export async function loginWithEmailPassword(params: { email: string; password: string }) {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+    credentials: "include",
+  });
 
-export const API = {
-  async loginWithEmailPassword(params: {
-    email: string;
-    password: string;
-  }) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-      credentials: "include",
+  const data = (await response.json().catch(() => ({}))) as AuthLoginResponseBody;
+
+  if (response.ok && typeof data.accessToken === "string" && data.accessToken.length > 0) {
+    const maxAge = getTokenCookieMaxAgeSeconds(data.accessToken);
+    const cookieStore = await cookies();
+    cookieStore.set(ACCESS_TOKEN_COOKIE, data.accessToken, {
+      path: "/",
+      maxAge,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     });
+  }
 
-    const data = (await response.json().catch(() => ({}))) as ApiError;
+  return {
+    ok: response.ok,
+    status: response.status,
+    message: response.ok ? undefined : formatApiMessage(data),
+  };
+}
 
-    if (response.ok && typeof data.accessToken === "string" && data.accessToken.length > 0) {
-      const decodedUser = decodeClientToken(data.accessToken);
-
-      localStorage.setItem("accessToken", data.accessToken);
-      if (decodedUser) {
-        localStorage.setItem("authUser", JSON.stringify(decodedUser));
-      }
-    }
-
-    return {
-      ok: response.ok,
-      status: response.status,
-      message: data.message,
-    };
-  },
-
-  async logoutCurrentUser() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("authUser");
-    return { ok: true, status: 200, message: "Logged out successfully" };
-  },
-};
+export async function logoutCurrentUser() {
+  const cookieStore = await cookies();
+  cookieStore.delete(ACCESS_TOKEN_COOKIE);
+  return { ok: true, status: 200, message: "Logged out successfully" };
+}

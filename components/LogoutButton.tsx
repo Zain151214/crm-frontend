@@ -1,21 +1,23 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { API } from "@/api";
 import { Button } from "@/components/ui";
+import { toastSuccess } from "@/lib/toast";
+import { useRouter } from "next/navigation";
+import { logoutCurrentUser } from "@/api/auth";
+import { useMutation } from "@tanstack/react-query";
 
 export function LogoutButton() {
   const router = useRouter();
-
   const logoutMutation = useMutation({
-    mutationFn: API.logoutCurrentUser,
+    mutationFn: logoutCurrentUser,
+    onSuccess: () => {
+      toastSuccess("You have been logged out.");
+      router.push("/login");
+    },
   });
 
-  const onLogout = async () => {
-    await logoutMutation.mutateAsync();
-    router.push("/login");
-    router.refresh();
+  const onLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (

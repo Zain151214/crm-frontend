@@ -1,37 +1,29 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { API } from "@/api";
-import { isStoredTokenValid } from "@/lib/client-auth";
 import { Button, Input } from "@/components/ui";
+import { loginWithEmailPassword } from "@/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useMutation({
-    mutationFn: API.loginWithEmailPassword,
+    mutationFn: loginWithEmailPassword,
   });
-
-  useEffect(() => {
-    const existingToken = localStorage.getItem("accessToken");
-    if (existingToken && isStoredTokenValid(existingToken)) {
-      router.replace("/dashboard");
-    }
-  }, [router]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setErrorMessage("");
     const result = await loginMutation.mutateAsync({ email, password });
     if (!result.ok) {
-      setErrorMessage(result.message ?? "Invalid email or password.");
+      toastError(result.message ?? "Invalid email or password.");
       return;
     }
+    toastSuccess("Signed in successfully.");
     router.push("/dashboard");
   };
 
@@ -64,19 +56,57 @@ export function LoginForm() {
           <Input
             id="password"
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
+            endAdornment={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+                    <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+                    <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+                    <path d="m2 2 20 20" />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            }
           />
-
-          {errorMessage ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {errorMessage}
-            </p>
-          ) : null}
 
           <Button type="submit" fullWidth disabled={loginMutation.isPending}>
             {loginMutation.isPending ? "Signing in..." : "Sign in"}

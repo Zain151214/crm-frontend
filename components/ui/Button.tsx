@@ -1,9 +1,4 @@
-import { ButtonHTMLAttributes } from "react";
-
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost";
-  fullWidth?: boolean;
-};
+import type { ButtonProps } from "@/types/components";
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:

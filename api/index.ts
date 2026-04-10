@@ -1,1 +1,1 @@
-export { API } from "./auth";
+export { CRM_API } from "./crm";
