@@ -34,9 +34,6 @@ export default function CreateUserPage() {
   return (
     <section className="max-w-xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
       <h1 className="text-2xl font-bold text-zinc-900">Create User</h1>
-      <p className="mt-2 text-sm text-zinc-600">
-        Per API: this creates a new organization from the user&apos;s name and adds the user to it.
-      </p>
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>
         <BackLink href="/dashboard/admin/users" flush />
         <Input

@@ -5,12 +5,12 @@ import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CRM_API } from "@/api";
 import { ListHeader, Loader, PaginationControls } from "@/components";
-import { useCustomerListQueryState } from "@/lib/hooks";
+import { useSearchPaginationQueryState } from "@/lib/hooks";
 
 const PAGE_SIZE = 10;
 
 function MemberCustomersContent() {
-  const { search, setSearch, page, setPage, debouncedSearch } = useCustomerListQueryState();
+  const { search, setSearch, page, setPage, debouncedSearch } = useSearchPaginationQueryState();
 
   const { data, isPending, isSuccess } = useQuery({
     queryKey: ["customers", "member", page, debouncedSearch],

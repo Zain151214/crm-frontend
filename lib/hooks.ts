@@ -12,7 +12,7 @@ export function useDebouncedValue<T>(value: T, delayMs = 400): T {
   return debounced;
 }
 
-export function useCustomerListQueryState() {
+export function useSearchPaginationQueryState() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

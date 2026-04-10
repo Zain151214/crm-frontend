@@ -5,6 +5,8 @@ import type {
   Customer,
   ListActivityLogsParams,
   ListCustomersParams,
+  ListOrganizationsParams,
+  ListUsersParams,
   Note,
   OrganizationSummary,
   Paginated,
@@ -28,26 +30,95 @@ export type {
 } from "@/types/crm";
 
 export const CRM_API = {
-  async listUsers(): Promise<User[]> {
-    return apiRequest<User[]>("/users", { method: "GET" });
+  async listUsers(params: ListUsersParams = {}): Promise<Paginated<User>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    const search = params.search?.trim() ?? "";
+    const q = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) q.set("search", search);
+
+    const result = await apiRequest<Paginated<User> | User[]>(`/users?${q.toString()}`, {
+      method: "GET",
+    });
+
+    if (Array.isArray(result)) {
+      return {
+        data: result,
+        meta: {
+          page,
+          limit,
+          total: result.length,
+          totalPages: Math.max(1, Math.ceil(result.length / Math.max(1, limit))),
+        },
+      };
+    }
+
+    return result;
   },
 
   async getUserById(id: string): Promise<User | null> {
-    const users = await this.listUsers();
-    return users.find((u) => u.id === id) ?? null;
+    let page = 1;
+    const limit = 50;
+    for (let i = 0; i < 40; i++) {
+      const list = await this.listUsers({ page, limit, search: "" });
+      const found = list.data.find((u) => u.id === id);
+      if (found) return found;
+      if (page >= list.meta.totalPages) break;
+      page += 1;
+    }
+    return null;
   },
 
   async createUser(input: CreateUserInput): Promise<User> {
     return apiRequest<User>("/users", { method: "POST", json: input });
   },
 
-  async listOrganizations(): Promise<OrganizationSummary[]> {
-   return apiRequest<OrganizationSummary[]>("/organizations", { method: "GET" });
+  async listOrganizations(
+    params: ListOrganizationsParams = {},
+  ): Promise<Paginated<OrganizationSummary>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    const search = params.search?.trim() ?? "";
+    const q = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (search) q.set("search", search);
+
+    const result = await apiRequest<Paginated<OrganizationSummary> | OrganizationSummary[]>(
+      `/organizations?${q.toString()}`,
+      { method: "GET" },
+    );
+
+    if (Array.isArray(result)) {
+      return {
+        data: result,
+        meta: {
+          page,
+          limit,
+          total: result.length,
+          totalPages: Math.max(1, Math.ceil(result.length / Math.max(1, limit))),
+        },
+      };
+    }
+
+    return result;
   },
 
   async getOrganizationById(id: string): Promise<OrganizationSummary | null> {
-    const list = await this.listOrganizations();
-    return list.find((o) => o.id === id) ?? null;
+    let page = 1;
+    const limit = 50;
+    for (let i = 0; i < 40; i++) {
+      const list = await this.listOrganizations({ page, limit, search: "" });
+      const found = list.data.find((o) => o.id === id);
+      if (found) return found;
+      if (page >= list.meta.totalPages) break;
+      page += 1;
+    }
+    return null;
   },
 
   async listCustomers(params: ListCustomersParams): Promise<Paginated<Customer>> {

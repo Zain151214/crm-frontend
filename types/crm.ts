@@ -77,6 +77,18 @@ export type ListCustomersParams = {
   search?: string;
 };
 
+export type ListUsersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+export type ListOrganizationsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
 export type ListActivityLogsParams = {
   page?: number;
   limit?: number;

@@ -47,7 +47,7 @@ export function Sidebar() {
   const items = role === "admin" ? adminNav : role === "member" ? memberNav : [];
 
   return (
-    <aside className="w-full border-b border-indigo-100 bg-white/90 p-4 backdrop-blur md:h-screen md:w-72 md:border-b-0 md:border-r">
+    <aside className="w-full shrink-0 border-b border-indigo-100 bg-white/90 p-4 backdrop-blur md:sticky md:top-0 md:h-screen md:max-h-screen md:w-72 md:overflow-y-auto md:border-b-0 md:border-r md:self-start">
       <div className="rounded-xl bg-linear-to-r from-indigo-600 to-cyan-500 p-4 text-white shadow-lg shadow-indigo-950/10">
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-100">CRM Panel</p>
         <p className="mt-1 text-xl font-bold">

@@ -4,6 +4,7 @@ export type UserRole = "admin" | "member";
 
 export type ClientAuthPayload = {
   sub?: string;
+  name?: string;
   email?: string;
   role?: string;
   organizationId?: string;

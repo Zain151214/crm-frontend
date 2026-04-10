@@ -1,30 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { CRM_API } from "@/api";
-import { useMemo, useState } from "react";
-import { useDebouncedValue } from "@/lib/hooks";
+import { useSearchPaginationQueryState } from "@/lib/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { filterByNameOrEmail, paginate } from "@/lib/pagination";
 import { ListHeader, Loader, PaginationControls } from "@/components";
 
 const PAGE_SIZE = 10;
 
-export default function AdminUsersPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const debouncedSearch = useDebouncedValue(search, 300);
+function AdminUsersContent() {
+  const { search, setSearch, page, setPage, debouncedSearch } = useSearchPaginationQueryState();
 
   const { data, isPending, isSuccess } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => CRM_API.listUsers(),
+    queryKey: ["users", page, debouncedSearch],
+    queryFn: () =>
+      CRM_API.listUsers({
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedSearch,
+      }),
   });
 
-  const filtered = useMemo(
-    () => filterByNameOrEmail(data ?? [], debouncedSearch),
-    [data, debouncedSearch],
-  );
-  const paged = useMemo(() => paginate(filtered, page, PAGE_SIZE), [filtered, page]);
+  const meta = data?.meta ?? { page: 1, totalPages: 1, total: 0 };
+  const rows = data?.data ?? [];
 
   return (
     <div className="space-y-4">
@@ -44,7 +43,7 @@ export default function AdminUsersPage() {
       {isPending ? <Loader label="Loading users…" /> : null}
       <section className="rounded-2xl border border-indigo-100 bg-white/90 p-4 shadow-lg shadow-indigo-950/5">
         <div className="space-y-3">
-          {paged.items.map((user) => (
+          {rows.map((user) => (
             <div key={user.id} className="flex items-center justify-between rounded-xl border border-zinc-200/80 bg-white p-3">
               <div>
                 <p className="font-semibold text-zinc-900">{user.name}</p>
@@ -55,12 +54,20 @@ export default function AdminUsersPage() {
               </Link>
             </div>
           ))}
-          {isSuccess && paged.items.length === 0 ? (
+          {isSuccess && rows.length === 0 ? (
             <p className="py-6 text-center text-sm text-zinc-500">No users match your search.</p>
           ) : null}
         </div>
       </section>
-      <PaginationControls page={paged.page} totalPages={paged.totalPages} onPageChange={setPage} />
+      <PaginationControls page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<Loader label="Loading users…" />}>
+      <AdminUsersContent />
+    </Suspense>
   );
 }
