@@ -1,26 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { CRM_API } from "@/api";
-import { useState } from "react";
-import { useDebouncedValue } from "@/lib/hooks";
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { CRM_API } from "@/api";
 import { ListHeader, Loader, PaginationControls } from "@/components";
+import { useCustomerListQueryState } from "@/lib/hooks";
 
 const PAGE_SIZE = 10;
 
-export default function MemberCustomersPage() {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const debounced = useDebouncedValue(search, 350);
+function MemberCustomersContent() {
+  const { search, setSearch, page, setPage, debouncedSearch } = useCustomerListQueryState();
 
   const { data, isPending, isSuccess } = useQuery({
-    queryKey: ["customers", "member", page, debounced],
+    queryKey: ["customers", "member", page, debouncedSearch],
     queryFn: () =>
       CRM_API.listCustomers({
         page,
         limit: PAGE_SIZE,
-        search: debounced,
+        search: debouncedSearch,
       }),
   });
 
@@ -71,5 +69,13 @@ export default function MemberCustomersPage() {
       </section>
       <PaginationControls page={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
     </div>
+  );
+}
+
+export default function MemberCustomersPage() {
+  return (
+    <Suspense fallback={<Loader label="Loading customers…" />}>
+      <MemberCustomersContent />
+    </Suspense>
   );
 }
