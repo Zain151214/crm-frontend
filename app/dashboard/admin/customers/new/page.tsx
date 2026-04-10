@@ -1,13 +1,15 @@
 "use client";
 
-import { CRM_API } from "@/api";
-import { toastSuccess } from "@/lib/toast";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button, Input } from "@/components/ui";
+import type { FormEvent } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { CRM_API } from "@/api";
+import { BackLink } from "@/components";
+import { Button, Input } from "@/components/ui";
+import { toastSuccess } from "@/lib/toast";
 
-export default function CreateCustomerPage() {
+export default function CreateAdminCustomerPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
@@ -19,7 +21,7 @@ export default function CreateCustomerPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
       toastSuccess("Customer created successfully.");
-      router.push("/dashboard/member/customers");
+      router.push("/dashboard/admin/customers");
     },
   });
 
@@ -32,6 +34,7 @@ export default function CreateCustomerPage() {
     <section className="max-w-xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
       <h1 className="text-2xl font-bold text-zinc-900">Create Customer</h1>
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>
+        <BackLink href="/dashboard/admin/customers" flush />
         <Input
           id="name"
           label="Name"
@@ -40,7 +43,14 @@ export default function CreateCustomerPage() {
           required
           minLength={2}
         />
-        <Input id="email" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
         <Input
           id="phone"
           label="Phone"

@@ -35,14 +35,6 @@ function MemberCustomersContent() {
           setSearch(value);
           setPage(1);
         }}
-        action={
-          <Link
-            href="/dashboard/member/customers/new"
-            className="rounded-xl bg-linear-to-r from-indigo-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
-          >
-            Create Customer
-          </Link>
-        }
       />
       {isPending ? <Loader label="Loading customers…" /> : null}
       <section className="rounded-2xl border border-indigo-100 bg-white/90 p-4 shadow-lg shadow-indigo-950/5">
