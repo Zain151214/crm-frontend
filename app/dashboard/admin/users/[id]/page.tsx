@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { CRM_API } from "@/api";
-import { BackLink, Loader } from "@/components";
 import { useParams } from "next/navigation";
+import { BackLink, Loader } from "@/components";
 import { useQuery } from "@tanstack/react-query";
 
 export default function UserDetailsPage() {

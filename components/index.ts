@@ -1,10 +1,9 @@
 export { LoginForm } from "./LoginForm";
 export { AppToaster } from "./AppToaster";
-export { Button, ConfirmDialog, EditCustomerDialog, Input, Loader } from "./ui";
-export { LoggedInUser } from "./LoggedInUser";
 export { LogoutButton } from "./LogoutButton";
-export { UserAccountMenu } from "./UserAccountMenu";
+export { LoggedInUser } from "./LoggedInUser";
 export { QueryProvider } from "./QueryProvider";
+export { UserAccountMenu } from "./UserAccountMenu";
 export {
   BackLink,
   CustomerDetailSummary,
@@ -12,3 +11,4 @@ export {
   ListHeader,
   PaginationControls,
 } from "./dashboard";
+export { Button, ConfirmDialog, EditCustomerDialog, Input, Loader } from "./ui";

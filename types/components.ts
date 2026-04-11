@@ -1,3 +1,4 @@
+import { CustomerDetail } from "@/api/crm";
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -60,3 +61,27 @@ export type SidebarNavItem = {
   href: string;
 };
 
+export type ConfirmDialogProps = {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmText?: string;
+  cancelText?: string;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+export type EditCustomerDialogProps = {
+  open: boolean;
+  email: string;
+  initialName: string;
+  initialPhone: string;
+  loading?: boolean;
+  onCancel: () => void;
+  onSave: (values: { name: string; phone: string }) => void;
+};
+
+export type Props = {
+  data: CustomerDetail;
+};

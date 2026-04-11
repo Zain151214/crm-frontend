@@ -2,8 +2,8 @@
 
 import { CRM_API } from "@/api";
 import { useParams } from "next/navigation";
-import { BackLink, CustomerDetailSummary, Loader } from "@/components";
 import { useQuery } from "@tanstack/react-query";
+import { BackLink, CustomerDetailSummary, Loader } from "@/components";
 
 export default function MemberCustomerDetailsPage() {
   const params = useParams<{ id: string }>();

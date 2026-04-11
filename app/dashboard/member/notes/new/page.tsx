@@ -3,10 +3,10 @@
 import { CRM_API } from "@/api";
 import { BackLink, Loader } from "@/components";
 import { Button, Input } from "@/components/ui";
-import { customersAssignedToCurrentUser } from "@/lib/member-customers";
-import { Suspense, FormEvent, useMemo, useState } from "react";
 import { toastSuccess, toastWarning } from "@/lib/toast";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, FormEvent, useMemo, useState } from "react";
+import { customersAssignedToCurrentUser } from "@/lib/member-customers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 function CreateNoteForm({ initialCustomerId }: { initialCustomerId: string }) {

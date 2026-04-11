@@ -1,16 +1,5 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { decodeClientToken } from "@/lib/client-auth";
-import { getAccessToken } from "@/lib/http";
-
-function readViewerIsAdmin(): boolean {
-  const token = getAccessToken();
-  return Boolean(token && decodeClientToken(token)?.role === "admin");
-}
-
-export function useViewerIsAdmin(): boolean {
-  return useSyncExternalStore(() => () => {}, readViewerIsAdmin, () => false);
-}
+import { useEffect, useState } from "react";
 
 export function useDebouncedValue<T>(value: T, delayMs = 400): T {
   const [debounced, setDebounced] = useState(value);

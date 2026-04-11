@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CRM_API } from "@/api";
 import { useQuery } from "@tanstack/react-query";
-import { ListHeader, Loader, PaginationControls } from "@/components";
 import { useSearchPaginationQueryState } from "@/lib/hooks";
+import { ListHeader, Loader, PaginationControls } from "@/components";
 
 const PAGE_SIZE = 10;
 

@@ -1,17 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-
-type ConfirmDialogProps = {
-  open: boolean;
-  title: string;
-  description: string;
-  confirmText?: string;
-  cancelText?: string;
-  loading?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-};
+import type { ConfirmDialogProps } from "@/types/components";
 
 export function ConfirmDialog({
   open,

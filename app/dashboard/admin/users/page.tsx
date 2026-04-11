@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
 import { CRM_API } from "@/api";
-import { useSearchPaginationQueryState } from "@/lib/hooks";
+import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchPaginationQueryState } from "@/lib/hooks";
 import { ListHeader, Loader, PaginationControls } from "@/components";
 
 const PAGE_SIZE = 10;

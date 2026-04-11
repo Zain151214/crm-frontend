@@ -1,8 +1,4 @@
-import type { CustomerDetail } from "@/types/crm";
-
-type Props = {
-  data: CustomerDetail;
-};
+import type {Props} from "@/types/components";
 
 export function CustomerDetailSummary({ data }: Props) {
   const notes = [...(data.notes ?? [])].sort(

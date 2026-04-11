@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { logoutCurrentUser } from "@/api/auth";
-import { roleLabel, toInitials, useLoggedInUserInfo } from "@/lib/logged-in-user";
-import { toastSuccess } from "@/lib/toast";
 import { Button } from "@/components/ui";
+import { toastSuccess } from "@/lib/toast";
+import { useRouter } from "next/navigation";
+import { logoutCurrentUser } from "@/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { roleLabel, toInitials, useLoggedInUserInfo } from "@/lib/logged-in-user";
 
 export function UserAccountMenu() {
   const router = useRouter();

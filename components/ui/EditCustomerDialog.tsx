@@ -1,18 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
-type EditCustomerDialogProps = {
-  open: boolean;
-  email: string;
-  initialName: string;
-  initialPhone: string;
-  loading?: boolean;
-  onCancel: () => void;
-  onSave: (values: { name: string; phone: string }) => void;
-};
+import { Button } from "@/components/ui/Button";
+import type { EditCustomerDialogProps } from "@/types/components";
 
 export function EditCustomerDialog({
   open,

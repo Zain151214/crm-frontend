@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CRM_API } from "@/api";
 import { Button } from "@/components/ui";
-import { ListHeader, Loader, PaginationControls } from "@/components";
-import { useSearchPaginationQueryState } from "@/lib/hooks";
 import { toastSuccess } from "@/lib/toast";
+import { Suspense, useState } from "react";
+import { useSearchPaginationQueryState } from "@/lib/hooks";
+import { ListHeader, Loader, PaginationControls } from "@/components";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const PAGE_SIZE = 10;
 
