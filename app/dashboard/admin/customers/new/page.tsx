@@ -32,9 +32,9 @@ export default function CreateAdminCustomerPage() {
 
   return (
     <section className="max-w-xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
-      <h1 className="text-2xl font-bold text-zinc-900">Create Customer</h1>
+      <BackLink href="/dashboard/admin/customers" />
+      <h1 className="mt-2 text-2xl font-bold text-zinc-900">Create Customer</h1>
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>
-        <BackLink href="/dashboard/admin/customers" flush />
         <Input
           id="name"
           label="Name"

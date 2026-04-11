@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { CRM_API } from "@/api";
 import { BackLink } from "@/components";
 import { toastSuccess } from "@/lib/toast";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+const ORG_PAGE_SIZE = 500;
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -14,7 +17,15 @@ export default function CreateUserPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [organizationId, setOrganizationId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const { data: orgsResult, isPending: orgsLoading, isError: orgsError } = useQuery({
+    queryKey: ["organizations", "create-user-dropdown"],
+    queryFn: () => CRM_API.listOrganizations({ page: 1, limit: ORG_PAGE_SIZE, search: "" }),
+  });
+
+  const organizations = orgsResult?.data ?? [];
 
   const createMutation = useMutation({
     mutationFn: CRM_API.createUser,
@@ -28,14 +39,57 @@ export default function CreateUserPage() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    createMutation.mutate({ name, email, password, role: "member" });
+    if (!organizationId) return;
+    createMutation.mutate({
+      name,
+      email,
+      password,
+      role: "member",
+      organizationId,
+    });
   };
 
   return (
     <section className="max-w-xl rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
-      <h1 className="text-2xl font-bold text-zinc-900">Create User</h1>
+      <BackLink href="/dashboard/admin/users" />
+      <h1 className="mt-2 text-2xl font-bold text-zinc-900">Create User</h1>
       <form className="mt-4 space-y-4" onSubmit={onSubmit}>
-        <BackLink href="/dashboard/admin/users" flush />
+        <div className="space-y-1.5">
+          <label htmlFor="organizationId" className="block text-sm font-medium text-zinc-700">
+            Organization <span className="text-red-600">*</span>
+          </label>
+          <select
+            id="organizationId"
+            className="block w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition-shadow focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+            value={organizationId}
+            onChange={(e) => setOrganizationId(e.target.value)}
+            required
+            disabled={orgsLoading || orgsError}
+          >
+            {orgsLoading ? <option value="">Loading organizations…</option> : null}
+            {orgsError ? <option value="">Unable to load organizations</option> : null}
+            {!orgsLoading && !orgsError ? (
+              <option value="">
+                {organizations.length > 0 ? "Select an organization" : "No organizations yet"}
+              </option>
+            ) : null}
+            {!orgsLoading && !orgsError
+              ? organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))
+              : null}
+          </select>
+          {!orgsLoading && !orgsError && organizations.length === 0 ? (
+            <p className="text-sm text-zinc-600">
+              Create an organization first.{" "}
+              <Link href="/dashboard/admin/organizations/new" className="font-semibold text-indigo-600 hover:underline">
+                New organization
+              </Link>
+            </p>
+          ) : null}
+        </div>
         <Input
           id="name"
           label="Name"
@@ -65,7 +119,7 @@ export default function CreateUserPage() {
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
+              className="cursor-pointer rounded-lg p-1.5 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -106,7 +160,10 @@ export default function CreateUserPage() {
             </button>
           }
         />
-        <Button type="submit" disabled={createMutation.isPending}>
+        <Button
+          type="submit"
+          disabled={createMutation.isPending || orgsLoading || orgsError || organizations.length === 0}
+        >
           {createMutation.isPending ? "Creating..." : "Create User"}
         </Button>
       </form>

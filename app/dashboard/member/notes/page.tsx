@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { paginate } from "@/lib/pagination";
 import { useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/lib/hooks";
-import { BackLink, ListHeader, Loader, PaginationControls } from "@/components";
+import { ListHeader, Loader, PaginationControls } from "@/components";
 import { customersAssignedToCurrentUser } from "@/lib/member-customers";
 
 const PAGE_SIZE = 10;
@@ -47,24 +47,20 @@ export default function MemberNotesPage() {
     isSuccess: notesSuccess,
     isError: notesError,
   } = useQuery({
-    queryKey: ["customer-notes", selectedCustomerId],
-    queryFn: () => CRM_API.listNotesForCustomer(selectedCustomerId),
+    queryKey: ["customer-notes", selectedCustomerId, debouncedNoteSearch.trim()],
+    queryFn: () =>
+      CRM_API.listNotesForCustomer(selectedCustomerId, {
+        search: debouncedNoteSearch.trim() || undefined,
+      }),
     enabled: Boolean(selectedCustomerId),
   });
 
-  const filteredNotes = useMemo(() => {
-    const list = notesData ?? [];
-    const q = debouncedNoteSearch.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((n) => n.content.toLowerCase().includes(q));
-  }, [notesData, debouncedNoteSearch]);
-
-  const paged = useMemo(() => paginate(filteredNotes, page, PAGE_SIZE), [filteredNotes, page]);
+  const paged = useMemo(() => paginate(notesData ?? [], page, PAGE_SIZE), [notesData, page]);
   const totalPages = Math.max(1, paged.totalPages);
 
   const noteFilterActive = debouncedNoteSearch.trim().length > 0;
   const showNoCustomersMatch = customersSuccess && assignableCustomers.length === 0;
-  const showNotesEmpty = notesSuccess && filteredNotes.length === 0;
+  const showNotesEmpty = notesSuccess && paged.total === 0;
 
   const createHref = selectedCustomerId
     ? `/dashboard/member/notes/new?customerId=${encodeURIComponent(selectedCustomerId)}`
@@ -72,7 +68,6 @@ export default function MemberNotesPage() {
 
   return (
     <div className="space-y-4">
-      <BackLink href="/dashboard/member/customers">Back</BackLink>
       <div className="rounded-2xl border border-indigo-100 bg-white/90 p-5 shadow-lg shadow-indigo-950/5">
         <h1 className="text-xl font-bold text-zinc-900 md:text-2xl">Notes</h1>
         <p className="mt-1 text-sm text-zinc-500">
@@ -119,7 +114,7 @@ export default function MemberNotesPage() {
           setPage(1);
         }}
         searchLabel="Search note content"
-        searchPlaceholder="Filter loaded notes…"
+        searchPlaceholder="Search notes…"
         description={selectedCustomerId ? "" : "Select a customer above to load notes."}
         action={
           <Link
@@ -166,7 +161,7 @@ export default function MemberNotesPage() {
           <PaginationControls
             page={paged.page}
             totalPages={totalPages}
-            total={filteredNotes.length}
+            total={paged.total}
             onPageChange={setPage}
           />
         </>

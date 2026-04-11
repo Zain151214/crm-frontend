@@ -37,7 +37,7 @@ export function EditCustomerDialog({
       <button
         type="button"
         aria-label="Close edit dialog"
-        className="absolute inset-0 bg-zinc-950/45 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-pointer bg-zinc-950/45 backdrop-blur-[2px] disabled:cursor-not-allowed"
         onClick={onCancel}
         disabled={loading}
       />

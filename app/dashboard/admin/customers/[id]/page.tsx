@@ -24,6 +24,11 @@ export default function AdminCustomerDetailsPage() {
     queryFn: () => CRM_API.getCustomerById(params.id),
   });
 
+  const showAssignControls =
+    data != null &&
+    !data.deletedAt &&
+    (data.assignedToId == null || data.assignedToId === "");
+
   const {
     data: usersResult,
     isPending: usersLoading,
@@ -31,7 +36,7 @@ export default function AdminCustomerDetailsPage() {
   } = useQuery({
     queryKey: ["users", "assign-options"],
     queryFn: () => CRM_API.listUsers({ page: 1, limit: 100, search: "" }),
-    enabled: Boolean(data) && assignUsersRequested,
+    enabled: showAssignControls && assignUsersRequested,
   });
 
   const users = usersResult?.data ?? [];
@@ -103,41 +108,45 @@ export default function AdminCustomerDetailsPage() {
               Edit
             </Button>
           ) : null}
-          <select
-            className="h-11 min-w-56 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
-            value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            onFocus={() => {
-              if (!assignUsersRequested) setAssignUsersRequested(true);
-            }}
-            disabled={assignUsersRequested && usersLoading}
-            aria-label="Assign customer to user"
-          >
-            {!assignUsersRequested ? (
-              <option value="">Open to load users…</option>
-            ) : null}
-            {assignUsersRequested && usersLoading ? <option value="">Loading users…</option> : null}
-            {assignUsersRequested && usersError ? <option value="">Unable to load users</option> : null}
-            {assignUsersRequested && !usersLoading && !usersError ? (
-              <option value="">
-                {users.length > 0 ? "Select user to assign" : "No users available"}
-              </option>
-            ) : null}
-            {assignUsersRequested && !usersLoading && !usersError
-              ? users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
+          {showAssignControls ? (
+            <>
+              <select
+                className="h-11 min-w-56 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                onFocus={() => {
+                  if (!assignUsersRequested) setAssignUsersRequested(true);
+                }}
+                disabled={assignUsersRequested && usersLoading}
+                aria-label="Assign customer to user"
+              >
+                {!assignUsersRequested ? (
+                  <option value="">Open to load users…</option>
+                ) : null}
+                {assignUsersRequested && usersLoading ? <option value="">Loading users…</option> : null}
+                {assignUsersRequested && usersError ? <option value="">Unable to load users</option> : null}
+                {assignUsersRequested && !usersLoading && !usersError ? (
+                  <option value="">
+                    {users.length > 0 ? "Select user to assign" : "No users available"}
                   </option>
-                ))
-              : null}
-          </select>
-          <Button
-            type="button"
-            onClick={onAssign}
-            disabled={!selectedUserId || assignMutation.isPending}
-          >
-            {assignMutation.isPending ? "Assigning..." : "Assign to user"}
-          </Button>
+                ) : null}
+                {assignUsersRequested && !usersLoading && !usersError
+                  ? users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))
+                  : null}
+              </select>
+              <Button
+                type="button"
+                onClick={onAssign}
+                disabled={!selectedUserId || assignMutation.isPending}
+              >
+                {assignMutation.isPending ? "Assigning..." : "Assign to user"}
+              </Button>
+            </>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -148,7 +157,7 @@ export default function AdminCustomerDetailsPage() {
             {deleteMutation.isPending ? "Deleting..." : "Delete"}
           </Button>
         </div>
-        {assignMutation.isError ? (
+        {showAssignControls && assignMutation.isError ? (
           <p className="text-xs text-red-600">
             {getErrorMessage(assignMutation.error, "Unable to assign customer.")}
           </p>

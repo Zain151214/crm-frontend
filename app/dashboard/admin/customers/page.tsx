@@ -66,7 +66,7 @@ function AdminCustomersContent() {
         <label className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700">
           Show
           <select
-            className="h-10 rounded-xl border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
+            className="h-10 rounded-xl border border-zinc-300 px-1 bg-white text-sm text-zinc-900"
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value as "active" | "deleted");

@@ -43,6 +43,19 @@ export type Note = {
   createdAt: string;
 };
 
+export type NoteDetail = {
+  id: string;
+  content: string;
+  createdAt: string;
+  customerName: string;
+  organizationName: string;
+  createdByName: string;
+};
+
+export type ListNotesForCustomerParams = {
+  search?: string;
+};
+
 export type ActivityLog = {
   id: string;
   entityType: string;
@@ -69,10 +82,40 @@ export type OrganizationSummary = {
   id: string;
   name: string;
   createdAt: string;
-  memberCount: number;
+  memberCount?: number;
+  _count?: { users: number };
 };
 
-/** Admin GET /users/:id — getByIdForAdmin */
+export type OrganizationCreated = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
+export type CreateOrganizationInput = {
+  name: string;
+};
+
+export type AdminOrganizationMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+};
+
+export type AdminOrganizationDetail = {
+  id: string;
+  name: string;
+  createdAt: string;
+  users: AdminOrganizationMember[];
+};
+
+export type AdminUserAssignedCustomer = {
+  id: string;
+  name: string;
+};
+
 export type AdminUserDetail = {
   id: string;
   name: string;
@@ -83,6 +126,7 @@ export type AdminUserDetail = {
   organization: OrganizationSummary | null;
   assignedCustomerNames: string[];
   assignedCustomerCount: number;
+  assignedCustomers?: AdminUserAssignedCustomer[];
 };
 
 export type CreateUserInput = {
@@ -90,6 +134,7 @@ export type CreateUserInput = {
   email: string;
   password: string;
   role: UserRole;
+  organizationId: string;
 };
 
 export type CreateCustomerInput = {

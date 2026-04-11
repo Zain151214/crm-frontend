@@ -16,7 +16,7 @@ export function Button({
   return (
     <button
       className={[
-        "inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors",
+        "inline-flex h-11 cursor-pointer items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors",
         "focus-visible:outline focus-visible:outline-offset-2",
         "disabled:cursor-not-allowed disabled:opacity-60",
         variantStyles[variant],

@@ -18,7 +18,7 @@ export function normalizeRole(value: unknown): UserRole | null {
 
 export function homeUrlForRole(role: UserRole, request: NextRequest) {
   const path =
-    role === "admin" ? "/dashboard/admin/users" : "/dashboard/member/customers";
+    role === "admin" ? "/dashboard/admin/organizations" : "/dashboard/member/customers";
     
   return new URL(path, request.url);
 }

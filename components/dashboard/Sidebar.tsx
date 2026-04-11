@@ -9,8 +9,8 @@ import { decodeClientToken } from "@/lib/client-auth";
 import type { SidebarNavItem } from "@/types/components";
 
 const adminNav: SidebarNavItem[] = [
-  { label: "Users", href: "/dashboard/admin/users" },
   { label: "Organizations", href: "/dashboard/admin/organizations" },
+  { label: "Users", href: "/dashboard/admin/users" },
   { label: "Customers", href: "/dashboard/admin/customers" },
   { label: "Activity Logs", href: "/dashboard/admin/activity-logs" },
 ];

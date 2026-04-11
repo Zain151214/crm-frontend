@@ -36,10 +36,20 @@ function OrganizationsContent() {
         }}
         searchLabel="Search organizations"
         searchPlaceholder="Type organization name..."
+        action={
+          <Link
+            href="/dashboard/admin/organizations/new"
+            className="rounded-xl bg-linear-to-r from-indigo-600 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+          >
+            Create organization
+          </Link>
+        }
       />
       {isPending ? <Loader label="Loading organizations…" /> : null}
       <section className="rounded-2xl border border-indigo-100 bg-white/90 p-4 shadow-lg shadow-indigo-950/5">
-        {organizations.map((org) => (
+        {organizations.map((org) => {
+          const memberCount = org._count?.users ?? org.memberCount ?? 0;
+          return (
           <div
             key={org.id}
             className="flex items-center justify-between border-b border-zinc-100 py-3 last:border-b-0"
@@ -47,7 +57,7 @@ function OrganizationsContent() {
             <div>
               <p className="font-semibold text-zinc-900">{org.name}</p>
               <p className="text-sm text-zinc-500">
-                {org.id} · {org.memberCount} members
+                {memberCount} {memberCount === 1 ? "member" : "members"}
               </p>
             </div>
             <Link
@@ -57,7 +67,8 @@ function OrganizationsContent() {
               View
             </Link>
           </div>
-        ))}
+          );
+        })}
         {isSuccess && organizations.length === 0 ? (
           <p className="py-6 text-center text-sm text-zinc-500">No organizations match your search.</p>
         ) : null}

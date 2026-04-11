@@ -21,7 +21,13 @@ export function LogoutButton() {
   };
 
   return (
-    <Button type="button" variant="ghost" onClick={onLogout} disabled={logoutMutation.isPending}>
+    <Button
+      type="button"
+      variant="ghost"
+      className="cursor-pointer bg-rose-50 text-red-800 ring-1 ring-red-200/80 hover:bg-rose-100 hover:ring-red-300/80 focus-visible:outline-red-400 disabled:cursor-not-allowed"
+      onClick={onLogout}
+      disabled={logoutMutation.isPending}
+    >
       {logoutMutation.isPending ? "Logging out..." : "Logout"}
     </Button>
   );

@@ -1,15 +1,31 @@
 "use client";
 
+import Link from "next/link";
 import { CRM_API } from "@/api";
-import { useParams } from "next/navigation";
 import { BackLink, Loader } from "@/components";
+import { listCustomersAssignedToUser } from "@/lib/admin-user-customers";
+import { useViewerIsAdmin } from "@/lib/hooks";
+import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 export default function UserDetailsPage() {
   const params = useParams<{ id: string }>();
+  const userId = params.id;
+  const viewerIsAdmin = useViewerIsAdmin();
+
   const { data, isPending, isError } = useQuery({
-    queryKey: ["users", params.id],
-    queryFn: () => CRM_API.getUserById(params.id),
+    queryKey: ["users", userId],
+    queryFn: () => CRM_API.getUserById(userId),
+  });
+
+  const {
+    data: assignedCustomers = [],
+    isPending: assignedPending,
+    isError: assignedError,
+  } = useQuery({
+    queryKey: ["customers", "forAssignee", userId],
+    queryFn: () => listCustomersAssignedToUser(userId),
+    enabled: Boolean(data?.id) && viewerIsAdmin,
   });
 
   if (isPending) return <Loader label="Loading user…" />;
@@ -30,8 +46,13 @@ export default function UserDetailsPage() {
   }
 
   const org = data.organization;
-  const names = data.assignedCustomerNames ?? [];
-  const hasAssigned = names.length > 0;
+  const namesFallback = data.assignedCustomerNames ?? [];
+  const countLabel =
+    typeof data.assignedCustomerCount === "number"
+      ? data.assignedCustomerCount
+      : Math.max(assignedCustomers.length, namesFallback.length);
+
+  const showTable = assignedCustomers.length > 0 || namesFallback.length > 0;
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
@@ -62,11 +83,19 @@ export default function UserDetailsPage() {
       <div className="mt-6 border-t border-zinc-100 pt-6">
         <h2 className="flex flex-wrap items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
           <span>Assigned customers</span>
-          {typeof data.assignedCustomerCount === "number" ? (
-            <span className="font-normal normal-case text-zinc-400">({data.assignedCustomerCount})</span>
-          ) : null}
+          <span className="font-normal normal-case text-zinc-400">({countLabel})</span>
         </h2>
-        {hasAssigned ? (
+        {viewerIsAdmin && assignedPending ? (
+          <p className="mt-3 text-sm text-zinc-500">Loading assigned customers…</p>
+        ) : null}
+        {viewerIsAdmin &&
+        !assignedPending &&
+        assignedError &&
+        assignedCustomers.length === 0 &&
+        namesFallback.length === 0 ? (
+          <p className="mt-3 text-sm text-red-600">Could not load assigned customers. Try again later.</p>
+        ) : null}
+        {!assignedPending && showTable ? (
           <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
             <table className="w-full text-left text-sm">
               <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -76,18 +105,33 @@ export default function UserDetailsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 bg-white text-zinc-800">
-                {names.map((name, index) => (
-                  <tr key={`${name}-${index}`} className="hover:bg-zinc-50/80">
-                    <td className="px-4 py-2.5 text-zinc-500">{index + 1}</td>
-                    <td className="px-4 py-2.5 font-medium">{name}</td>
-                  </tr>
-                ))}
+                {viewerIsAdmin && assignedCustomers.length > 0
+                  ? assignedCustomers.map((customer, index) => (
+                      <tr key={customer.id} className="hover:bg-zinc-50/80">
+                        <td className="px-4 py-2.5 text-zinc-500">{index + 1}</td>
+                        <td className="px-4 py-2.5 font-medium">
+                          <Link
+                            href={`/dashboard/admin/customers/${customer.id}`}
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {customer.name}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  : namesFallback.map((name, index) => (
+                      <tr key={`${name}-${index}`} className="hover:bg-zinc-50/80">
+                        <td className="px-4 py-2.5 text-zinc-500">{index + 1}</td>
+                        <td className="px-4 py-2.5 font-medium text-zinc-700">{name}</td>
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : null}
+        {!assignedPending && !showTable && !(viewerIsAdmin && assignedError) ? (
           <p className="mt-3 text-sm text-zinc-500">No customers assigned to this user.</p>
-        )}
+        ) : null}
       </div>
     </section>
   );

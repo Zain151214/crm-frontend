@@ -1,8 +1,10 @@
 import type {
   ActivityLog,
+  AdminOrganizationDetail,
   AdminUserDetail,
   AssignCustomerInput,
   CreateCustomerInput,
+  CreateOrganizationInput,
   CreateUserInput,
   Customer,
   CustomerDetail,
@@ -10,8 +12,11 @@ import type {
   ListActivityLogsParams,
   ListCustomersParams,
   ListOrganizationsParams,
+  ListNotesForCustomerParams,
   ListUsersParams,
   Note,
+  NoteDetail,
+  OrganizationCreated,
   OrganizationSummary,
   Paginated,
   User,
@@ -26,10 +31,13 @@ import {
 
 export type {
   ActivityLog,
+  AdminOrganizationDetail,
   AdminUserDetail,
   Customer,
   CustomerDetail,
   Note,
+  NoteDetail,
+  OrganizationCreated,
   OrganizationSummary,
   Paginated,
   User,
@@ -120,17 +128,34 @@ export const CRM_API = {
     return result;
   },
 
-  async getOrganizationById(id: string): Promise<OrganizationSummary | null> {
-    let page = 1;
-    const limit = 50;
-    for (let i = 0; i < 40; i++) {
-      const list = await this.listOrganizations({ page, limit, search: "" });
-      const found = list.data.find((o) => o.id === id);
-      if (found) return found;
-      if (page >= list.meta.totalPages) break;
-      page += 1;
+  async createOrganization(input: CreateOrganizationInput): Promise<OrganizationCreated> {
+    return apiRequest<OrganizationCreated>("/organizations", {
+      method: "POST",
+      json: { name: input.name.trim() },
+    });
+  },
+
+  async getOrganizationById(id: string): Promise<AdminOrganizationDetail | null> {
+    const token = getAccessToken();
+    if (!token) throw new Error("Not authenticated.");
+
+    const res = await fetch(`${API_BASE_URL}/organizations/${encodeURIComponent(id)}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.status === 404) return null;
+
+    const body = (await res.json().catch(() => ({}))) as ApiErrorBody & Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error(formatApiMessage(body));
     }
-    return null;
+
+    const raw = body as AdminOrganizationDetail;
+    return {
+      ...raw,
+      users: Array.isArray(raw.users) ? raw.users : [],
+    };
   },
 
   async listCustomers(params: ListCustomersParams): Promise<Paginated<Customer>> {
@@ -230,8 +255,18 @@ export const CRM_API = {
     return null;
   },
 
-  async listNotesForCustomer(customerId: string): Promise<Note[]> {
-    return apiRequest<Note[]>(`/customers/${customerId}/notes`, { method: "GET" });
+  async listNotesForCustomer(
+    customerId: string,
+    params?: ListNotesForCustomerParams,
+  ): Promise<Note[]> {
+    const q = new URLSearchParams();
+    const search = params?.search?.trim();
+    if (search) q.set("search", search);
+    const qs = q.toString();
+    const path = `/customers/${encodeURIComponent(customerId)}/notes${qs ? `?${qs}` : ""}`;
+    const result = await apiRequest<Note[] | Paginated<Note>>(path, { method: "GET" });
+    if (Array.isArray(result)) return result;
+    return result.data;
   },
 
   async createNote(customerId: string, input: { content: string }): Promise<Note> {
@@ -241,9 +276,23 @@ export const CRM_API = {
     });
   },
 
-  async getNoteById(customerId: string, noteId: string): Promise<Note | null> {
-    const notes = await this.listNotesForCustomer(customerId);
-    return notes.find((n) => n.id === noteId) ?? null;
+  async getNoteById(customerId: string, noteId: string): Promise<NoteDetail | null> {
+    const token = getAccessToken();
+    if (!token) throw new Error("Not authenticated.");
+
+    const res = await fetch(
+      `${API_BASE_URL}/customers/${encodeURIComponent(customerId)}/notes/${encodeURIComponent(noteId)}`,
+      { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    if (res.status === 404) return null;
+
+    const body = (await res.json().catch(() => ({}))) as ApiErrorBody & Record<string, unknown>;
+    if (!res.ok) {
+      throw new Error(formatApiMessage(body));
+    }
+
+    return body as NoteDetail;
   },
 
   async listActivityLogs(params: ListActivityLogsParams): Promise<Paginated<ActivityLog>> {

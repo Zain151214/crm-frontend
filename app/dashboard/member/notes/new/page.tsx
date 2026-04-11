@@ -59,6 +59,10 @@ function CreateNoteForm({ initialCustomerId }: { initialCustomerId: string }) {
         <div className="space-y-1.5">
           <label htmlFor="customerId" className="block text-sm font-medium text-zinc-700">
             Customer (assigned to you)
+            <span className="text-red-600" aria-hidden>
+              {" "}
+              *
+            </span>
           </label>
           <select
             id="customerId"

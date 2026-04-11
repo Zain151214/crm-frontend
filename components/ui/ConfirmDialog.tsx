@@ -30,7 +30,7 @@ export function ConfirmDialog({
       <button
         type="button"
         aria-label="Close confirmation dialog"
-        className="absolute inset-0 bg-zinc-950/45 backdrop-blur-[2px]"
+        className="absolute inset-0 cursor-pointer bg-zinc-950/45 backdrop-blur-[2px]"
         onClick={onCancel}
       />
       <div className="relative w-full max-w-md rounded-2xl border border-red-100 bg-white p-6 shadow-2xl shadow-zinc-900/20">

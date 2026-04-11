@@ -41,11 +41,11 @@ function ChevronRight({ className = "" }: { className?: string }) {
 }
 
 const navBtn =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold transition-all " +
+  "inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold transition-all " +
   "bg-linear-to-r from-indigo-600 to-cyan-500 text-white shadow-md shadow-indigo-900/20 " +
   "hover:from-indigo-500 hover:to-cyan-400 hover:shadow-lg hover:shadow-indigo-900/25 " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 " +
-  "active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none disabled:saturate-0";
+  "active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:saturate-0";
 
 export function PaginationControls({
   page,
@@ -58,11 +58,9 @@ export function PaginationControls({
       <div className="min-h-6">
         {typeof total === "number" ? (
           <p className="text-sm text-zinc-600">
+            <span className="font-medium text-zinc-800">Total: </span>
             <span className="text-lg font-bold tabular-nums text-indigo-700">
               {total.toLocaleString()}
-            </span>{" "}
-            <span className="font-medium text-zinc-800">
-              {total === 1 ? "item" : "items"} total
             </span>
           </p>
         ) : null}

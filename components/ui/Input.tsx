@@ -7,6 +7,7 @@ export function Input({
   error,
   className = "",
   endAdornment,
+  required,
   ...props
 }: InputProps) {
   const inputClassName = [
@@ -23,14 +24,20 @@ export function Input({
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-sm font-medium text-zinc-700">
         {label}
+        {required ? (
+          <span className="text-red-600" aria-hidden>
+            {" "}
+            *
+          </span>
+        ) : null}
       </label>
       {endAdornment ? (
         <div className="relative">
-          <input id={id} type={type} className={inputClassName} {...props} />
+          <input id={id} type={type} className={inputClassName} required={required} {...props} />
           <div className="absolute inset-y-0 right-0 flex items-center pr-2">{endAdornment}</div>
         </div>
       ) : (
-        <input id={id} type={type} className={inputClassName} {...props} />
+        <input id={id} type={type} className={inputClassName} required={required} {...props} />
       )}
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard/member/customers", request.url));
     }
     if (pathname.startsWith("/dashboard/member") && role !== "member") {
-      return NextResponse.redirect(new URL("/dashboard/admin/users", request.url));
+      return NextResponse.redirect(homeUrlForRole(role, request));
     }
   }
 

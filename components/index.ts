@@ -3,6 +3,7 @@ export { AppToaster } from "./AppToaster";
 export { Button, ConfirmDialog, EditCustomerDialog, Input, Loader } from "./ui";
 export { LoggedInUser } from "./LoggedInUser";
 export { LogoutButton } from "./LogoutButton";
+export { UserAccountMenu } from "./UserAccountMenu";
 export { QueryProvider } from "./QueryProvider";
 export {
   BackLink,
