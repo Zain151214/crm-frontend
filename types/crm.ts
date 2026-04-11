@@ -114,6 +114,15 @@ export type AdminOrganizationDetail = {
 export type AdminUserAssignedCustomer = {
   id: string;
   name: string;
+  organizationId?: string;
+};
+
+export type AdminUserOrganization = {
+  id: string;
+  name: string;
+  createdAt?: string;
+  memberCount?: number;
+  _count?: { users: number };
 };
 
 export type AdminUserDetail = {
@@ -123,8 +132,8 @@ export type AdminUserDetail = {
   role: UserRole;
   organizationId: string;
   createdAt: string;
-  organization: OrganizationSummary | null;
-  assignedCustomerNames: string[];
+  organization: AdminUserOrganization | null;
+  assignedCustomerNames?: string[];
   assignedCustomerCount: number;
   assignedCustomers?: AdminUserAssignedCustomer[];
 };

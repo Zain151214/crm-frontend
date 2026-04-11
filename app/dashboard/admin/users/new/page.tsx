@@ -31,7 +31,6 @@ export default function CreateUserPage() {
     mutationFn: CRM_API.createUser,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["users"] });
-      await queryClient.invalidateQueries({ queryKey: ["organizations"] });
       toastSuccess("User created successfully.");
       router.push("/dashboard/admin/users");
     },

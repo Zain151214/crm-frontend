@@ -3,29 +3,16 @@
 import Link from "next/link";
 import { CRM_API } from "@/api";
 import { BackLink, Loader } from "@/components";
-import { listCustomersAssignedToUser } from "@/lib/admin-user-customers";
-import { useViewerIsAdmin } from "@/lib/hooks";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 export default function UserDetailsPage() {
   const params = useParams<{ id: string }>();
   const userId = params.id;
-  const viewerIsAdmin = useViewerIsAdmin();
 
   const { data, isPending, isError } = useQuery({
     queryKey: ["users", userId],
     queryFn: () => CRM_API.getUserById(userId),
-  });
-
-  const {
-    data: assignedCustomers = [],
-    isPending: assignedPending,
-    isError: assignedError,
-  } = useQuery({
-    queryKey: ["customers", "forAssignee", userId],
-    queryFn: () => listCustomersAssignedToUser(userId),
-    enabled: Boolean(data?.id) && viewerIsAdmin,
   });
 
   if (isPending) return <Loader label="Loading user…" />;
@@ -46,6 +33,7 @@ export default function UserDetailsPage() {
   }
 
   const org = data.organization;
+  const assignedCustomers = data.assignedCustomers ?? [];
   const namesFallback = data.assignedCustomerNames ?? [];
   const countLabel =
     typeof data.assignedCustomerCount === "number"
@@ -53,6 +41,7 @@ export default function UserDetailsPage() {
       : Math.max(assignedCustomers.length, namesFallback.length);
 
   const showTable = assignedCustomers.length > 0 || namesFallback.length > 0;
+  const orgMemberCount = org?._count?.users ?? org?.memberCount;
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
@@ -71,8 +60,8 @@ export default function UserDetailsPage() {
             <li>
               <span className="font-medium text-zinc-900">{org.name}</span>
             </li>
-            {typeof org.memberCount === "number" ? (
-              <li className="text-zinc-500">Members: {org.memberCount}</li>
+            {typeof orgMemberCount === "number" ? (
+              <li className="text-zinc-500">Members: {orgMemberCount}</li>
             ) : null}
           </ul>
         ) : (
@@ -85,17 +74,7 @@ export default function UserDetailsPage() {
           <span>Assigned customers</span>
           <span className="font-normal normal-case text-zinc-400">({countLabel})</span>
         </h2>
-        {viewerIsAdmin && assignedPending ? (
-          <p className="mt-3 text-sm text-zinc-500">Loading assigned customers…</p>
-        ) : null}
-        {viewerIsAdmin &&
-        !assignedPending &&
-        assignedError &&
-        assignedCustomers.length === 0 &&
-        namesFallback.length === 0 ? (
-          <p className="mt-3 text-sm text-red-600">Could not load assigned customers. Try again later.</p>
-        ) : null}
-        {!assignedPending && showTable ? (
+        {showTable ? (
           <div className="mt-3 overflow-hidden rounded-lg border border-zinc-200">
             <table className="w-full text-left text-sm">
               <thead className="bg-zinc-50 text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -105,7 +84,7 @@ export default function UserDetailsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 bg-white text-zinc-800">
-                {viewerIsAdmin && assignedCustomers.length > 0
+                {assignedCustomers.length > 0
                   ? assignedCustomers.map((customer, index) => (
                       <tr key={customer.id} className="hover:bg-zinc-50/80">
                         <td className="px-4 py-2.5 text-zinc-500">{index + 1}</td>
@@ -128,10 +107,9 @@ export default function UserDetailsPage() {
               </tbody>
             </table>
           </div>
-        ) : null}
-        {!assignedPending && !showTable && !(viewerIsAdmin && assignedError) ? (
+        ) : (
           <p className="mt-3 text-sm text-zinc-500">No customers assigned to this user.</p>
-        ) : null}
+        )}
       </div>
     </section>
   );

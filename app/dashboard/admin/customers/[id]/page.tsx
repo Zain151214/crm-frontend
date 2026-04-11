@@ -3,11 +3,12 @@
 import { CRM_API } from "@/api";
 import { Button } from "@/components/ui";
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
-import { BackLink, ConfirmDialog, CustomerDetailSummary, EditCustomerDialog, Loader } from "@/components";
 import { getErrorMessage, toastSuccess } from "@/lib/toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BackLink, ConfirmDialog, CustomerDetailSummary, EditCustomerDialog, Loader } from "@/components";
 
 export default function AdminCustomerDetailsPage() {
   const router = useRouter();
@@ -18,10 +19,14 @@ export default function AdminCustomerDetailsPage() {
   const [assignUsersRequested, setAssignUsersRequested] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailSuppressedForCustomerId, setDetailSuppressedForCustomerId] = useState<string | null>(null);
+  const suppressCustomerDetailQuery =
+    Boolean(params.id) && detailSuppressedForCustomerId === params.id;
 
   const { data, isPending, isError } = useQuery({
     queryKey: ["customers", params.id],
     queryFn: () => CRM_API.getCustomerById(params.id),
+    enabled: Boolean(params.id) && !suppressCustomerDetailQuery,
   });
 
   const showAssignControls =
@@ -53,7 +58,6 @@ export default function AdminCustomerDetailsPage() {
     mutationFn: (input: { name: string; phone: string }) =>
       CRM_API.updateCustomer(params.id, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
       await queryClient.invalidateQueries({ queryKey: ["customers", params.id] });
       setEditDialogOpen(false);
       toastSuccess("Customer updated successfully.");
@@ -63,11 +67,25 @@ export default function AdminCustomerDetailsPage() {
   const deleteMutation = useMutation({
     mutationFn: () => CRM_API.deleteCustomer(params.id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      flushSync(() => {
+        setDetailSuppressedForCustomerId(params.id);
+      });
+      queryClient.cancelQueries({ queryKey: ["customers", params.id] });
+      queryClient.removeQueries({ queryKey: ["customers", params.id] });
+      await queryClient.invalidateQueries({ queryKey: ["customers", "admin"] });
       toastSuccess("Customer deleted successfully.");
       router.push("/dashboard/admin/customers");
     },
   });
+
+  if (suppressCustomerDetailQuery) {
+    return (
+      <div className="space-y-3">
+        <BackLink href="/dashboard/admin/customers" />
+        <Loader variant="inline" label="Redirecting…" />
+      </div>
+    );
+  }
 
   if (isPending) return <Loader label="Loading customer…" />;
   if (isError)
